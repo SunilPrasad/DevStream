@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(cd C:/ClaudeCode/DevStream && npx @angular/cli@latest new devstream --directory . --routing --style=scss --zoneless --defaults 2>&1)"
+    ]
+  }
+}
