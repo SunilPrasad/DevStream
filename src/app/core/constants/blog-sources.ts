@@ -1,5 +1,11 @@
 import { BlogSource } from '../models/blog-source.model';
 
+/**
+ * All RSS sources for DevStream.
+ * Order defines the round-robin interleaving used by FeedService:
+ *   Netflix[0] → Meta[0] → Google[0] → Uber[0] → Airbnb[0]
+ *   → Microsoft[0] → GitHub[0] → Netflix[1] → ...
+ */
 export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Netflix Tech Blog',
@@ -14,12 +20,13 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Google Developers',
     rssUrl: 'https://developers.googleblog.com/feeds/posts/default',
-    logoUrl: 'https://www.gstatic.com/devrel-devsite/prod/v870e399c64f6d325c1f390d2d89f0ecc5de7b3248b49b5cf4b8bb0e73b8e4b47/developers/images/favicon-new.png',
+    // Stable Google brand icon from their public gstatic CDN
+    logoUrl: 'https://www.gstatic.com/images/branding/googleg/2x/googleg_standard_color_128dp.png',
   },
   {
     name: 'Uber Engineering',
     rssUrl: 'https://www.uber.com/en-US/blog/engineering/rss/',
-    logoUrl: 'https://d1a3f4spazzht1.cloudfront.net/i/a90b736cd858ebab0f4e6dbe8c6ebdfa.png',
+    logoUrl: 'https://d3i4yxtzktqr9n.cloudfront.net/web-static/img/favicon.png',
   },
   {
     name: 'Airbnb Engineering',

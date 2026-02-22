@@ -172,7 +172,7 @@ At the start of every session:
 
 ## Current Status
 [x] Step 1 - Project scaffolded (Angular v21 + Bootstrap v5.3.8 + Zoneless)
-[ ] Step 2 - Models and constants defined
+[x] Step 2 - Models and constants defined
 [ ] Step 3 - RSS service and feed pool builder
 [ ] Step 4 - Summarizer service (Claude API, on demand, memory cached)
 [ ] Step 5 - Swipeable card feed UI with Angular CDK gestures

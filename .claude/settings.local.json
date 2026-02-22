@@ -3,7 +3,10 @@
     "allow": [
       "Bash(head:*)",
       "Bash(grep:*)",
-      "Bash(cd C:/ClaudeCode/DevStream && npx @angular/cli@latest new devstream --directory . --routing --style=scss --zoneless --defaults 2>&1)"
+      "Bash(cd C:/ClaudeCode/DevStream && npx @angular/cli@latest new devstream --directory . --routing --style=scss --zoneless --defaults 2>&1)",
+      "Bash(cd C:/ClaudeCode/DevStream && npm install bootstrap@5.3.8 bootstrap-icons @angular/cdk 2>&1)",
+      "Bash(cd C:/ClaudeCode/DevStream && npx ng build --configuration development 2>&1)",
+      "Bash(cd:*)"
     ]
   }
 }
