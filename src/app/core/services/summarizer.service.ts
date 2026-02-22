@@ -9,7 +9,7 @@ import { ClaudeRequest, ClaudeResponse } from '../models/claude-api.model';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 const MAX_TOKENS = 1500;
-const API_KEY_STORAGE_KEY = 'devstream_claude_api_key';
+const API_KEY_STORAGE_KEY = '';
 const FALLBACK_SUMMARY = 'Summary unavailable for this article.';
 
 const SUMMARISE_PROMPT = (title: string, text: string) =>
@@ -37,7 +37,7 @@ export class SummarizerService {
     const cached = this.cache.get(article.url);
     if (cached !== undefined) return of(cached);
 
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    const apiKey = API_KEY_STORAGE_KEY || localStorage.getItem('devstream_claude_api_key');
     if (!apiKey) {
       const msg = 'Add your Claude API key in Settings to enable summaries.';
       return of(msg);

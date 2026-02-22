@@ -5,7 +5,6 @@ import { provideZonelessChangeDetection } from '@angular/core';
 
 import { RssService } from './rss.service';
 import { BlogSource } from '../models/blog-source.model';
-import { Rss2JsonResponse } from '../models/rss2json.model';
 
 const mockSource: BlogSource = {
   name: 'Test Blog',
@@ -13,36 +12,50 @@ const mockSource: BlogSource = {
   logoUrl: 'https://example.com/logo.png',
 };
 
-const mockResponse: Rss2JsonResponse = {
-  status: 'ok',
-  feed: { url: '', title: '', link: '', author: '', description: '', image: '' },
-  items: [
-    {
-      title: 'Article One',
-      pubDate: '2025-01-12 10:00:00',
-      link: 'https://example.com/article-1',
-      guid: 'guid-1',
-      author: 'Author',
-      thumbnail: 'https://example.com/img.jpg',
-      description: 'desc',
-      content: 'content',
-      enclosure: {},
-      categories: [],
-    },
-    {
-      title: 'Article Two',
-      pubDate: '2025-01-11 10:00:00',
-      link: 'https://example.com/article-2',
-      guid: 'guid-2',
-      author: 'Author',
-      thumbnail: '',
-      description: 'desc',
-      content: 'content',
-      enclosure: { link: 'https://example.com/enc.jpg', type: 'image/jpeg' },
-      categories: [],
-    },
-  ],
-};
+// ── RSS 2.0 fixture ──────────────────────────────────────────────────────────
+const RSS2_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Test Blog</title>
+    <item>
+      <title>Article One</title>
+      <link>https://example.com/article-1</link>
+      <pubDate>Sun, 12 Jan 2025 10:00:00 +0000</pubDate>
+      <media:content url="https://example.com/img.jpg" medium="image"/>
+      <description>Short excerpt</description>
+      <content:encoded><![CDATA[<p>Full content here.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Article Two</title>
+      <link>https://example.com/article-2</link>
+      <pubDate>Sat, 11 Jan 2025 10:00:00 +0000</pubDate>
+      <enclosure url="https://example.com/enc.jpg" type="image/jpeg" length="0"/>
+      <description>Another excerpt</description>
+    </item>
+    <item>
+      <title>Article Three</title>
+      <link>https://example.com/article-3</link>
+      <pubDate>Fri, 10 Jan 2025 10:00:00 +0000</pubDate>
+      <description><![CDATA[<p><img src="https://example.com/desc-img.jpg"/></p>]]></description>
+    </item>
+  </channel>
+</rss>`;
+
+// ── Atom fixture ─────────────────────────────────────────────────────────────
+const ATOM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Test Atom Blog</title>
+  <entry>
+    <title>Atom Article</title>
+    <link rel="alternate" href="https://example.com/atom-1"/>
+    <published>2025-01-12T10:00:00Z</published>
+    <content type="html"><![CDATA[<p>Atom content.</p>]]></content>
+  </entry>
+</feed>`;
+
+// ── Broken XML ───────────────────────────────────────────────────────────────
+const BAD_XML = `not xml at all <<< broken`;
 
 describe('RssService', () => {
   let service: RssService;
@@ -62,16 +75,23 @@ describe('RssService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('maps rss2json items to ArticleMetadata', () => {
+  // ── URL ───────────────────────────────────────────────────────────────────
+
+  it('routes requests through allorigins.win', () => {
+    service.fetchArticles(mockSource).subscribe();
+    const req = httpMock.expectOne((r) => r.url.includes('allorigins.win'));
+    expect(req.request.url).toContain(encodeURIComponent(mockSource.rssUrl));
+    req.flush(RSS2_XML);
+  });
+
+  // ── RSS 2.0 parsing ───────────────────────────────────────────────────────
+
+  it('parses RSS 2.0 items into ArticleMetadata', () => {
     let result: ReturnType<typeof service.fetchArticles> extends import('rxjs').Observable<infer T> ? T : never = [];
+    service.fetchArticles(mockSource).subscribe((a) => (result = a));
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
 
-    service.fetchArticles(mockSource).subscribe((articles) => (result = articles));
-
-    const req = httpMock.expectOne((r) => r.url.includes('rss2json.com'));
-    req.flush(mockResponse);
-
-    expect(result.length).toBe(2);
-
+    expect(result.length).toBe(3);
     expect(result[0]).toMatchObject({
       url: 'https://example.com/article-1',
       title: 'Article One',
@@ -81,32 +101,60 @@ describe('RssService', () => {
     });
   });
 
-  it('falls back to enclosure link when thumbnail is absent', () => {
+  it('falls back to enclosure image when media:content is absent', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
-
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('rss2json.com')).flush(mockResponse);
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
 
     expect(result[1].imageUrl).toBe('https://example.com/enc.jpg');
   });
 
-  it('returns empty array when rss2json status is error', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
-
+  it('falls back to first <img> in description when no media elements exist', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock
-      .expectOne((r) => r.url.includes('rss2json.com'))
-      .flush({ status: 'error', message: 'bad url' });
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+
+    expect(result[2].imageUrl).toBe('https://example.com/desc-img.jpg');
+  });
+
+  it('stores content:encoded in rawContent', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [];
+    service.fetchArticles(mockSource).subscribe((a) => (result = a));
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+
+    expect(result[0].rawContent).toContain('Full content here.');
+  });
+
+  // ── Atom parsing ──────────────────────────────────────────────────────────
+
+  it('parses Atom feeds', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [];
+    service.fetchArticles(mockSource).subscribe((a) => (result = a));
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(ATOM_XML);
+
+    expect(result.length).toBe(1);
+    expect(result[0]).toMatchObject({
+      url: 'https://example.com/atom-1',
+      title: 'Atom Article',
+      publishedDate: '2025-01-12T10:00:00Z',
+    });
+  });
+
+  // ── Error cases ───────────────────────────────────────────────────────────
+
+  it('returns [] on malformed XML', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
+    service.fetchArticles(mockSource).subscribe((a) => (result = a));
+    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(BAD_XML);
 
     expect(result).toEqual([]);
   });
 
-  it('returns empty array on HTTP error', () => {
+  it('returns [] on HTTP error', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
-
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
     httpMock
-      .expectOne((r) => r.url.includes('rss2json.com'))
+      .expectOne((r) => r.url.includes('allorigins.win'))
       .flush('', { status: 500, statusText: 'Server Error' });
 
     expect(result).toEqual([]);

@@ -8,7 +8,8 @@
       "Bash(cd C:/ClaudeCode/DevStream && npx ng build --configuration development 2>&1)",
       "Bash(cd:*)",
       "Bash(cd C:/ClaudeCode/DevStream && npx ng test --run-in-band 2>&1)",
-      "Bash(cd C:/ClaudeCode/DevStream && npx ng test 2>&1)"
+      "Bash(cd C:/ClaudeCode/DevStream && npx ng test 2>&1)",
+      "Bash(tail:*)"
     ]
   }
 }

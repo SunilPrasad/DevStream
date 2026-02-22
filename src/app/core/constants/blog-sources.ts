@@ -25,7 +25,7 @@ export const BLOG_SOURCES: BlogSource[] = [
   },
   {
     name: 'Uber Engineering',
-    rssUrl: 'https://www.uber.com/en-US/blog/engineering/rss/',
+    rssUrl: 'https://medium.com/feed/uber-engineering',
     logoUrl: 'https://d3i4yxtzktqr9n.cloudfront.net/web-static/img/favicon.png',
   },
   {
