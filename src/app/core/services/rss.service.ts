@@ -5,19 +5,21 @@ import { catchError, map } from 'rxjs/operators';
 
 import { ArticleMetadata } from '../models/article.model';
 import { BlogSource } from '../models/blog-source.model';
+import { Rss2JsonItem, Rss2JsonResponse } from '../models/rss2json.model';
 
 /**
- * Ordered list of CORS proxies tried in sequence.
- * corsproxy.io is tried first; allorigins.win is the fallback.
- * If all proxies fail the source returns [].
+ * XML proxy chain used for direct RSS/Atom parsing.
+ * codetabs is first because it currently works better from static hosting
+ * origins where some public proxies return 403.
  */
-const CORS_PROXIES: Array<(url: string) => string> = [
-  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+const XML_CORS_PROXIES: Array<(url: string) => string> = [
+  (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
 ];
+
+const RSS2JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json';
 const MAX_ITEMS = 20;
 
-// Yahoo Media RSS namespace URI (used by many blogs for images)
+// Yahoo Media RSS namespace URI
 const MEDIA_NS = 'http://search.yahoo.com/mrss/';
 
 @Injectable({ providedIn: 'root' })
@@ -25,36 +27,68 @@ export class RssService {
   private readonly http = inject(HttpClient);
 
   /**
-   * Fetch and parse one RSS/Atom feed, trying each CORS proxy in order.
-   * Returns [] only when all proxies are exhausted.
+   * Fetch one feed client-side with fallbacks:
+   * 1) XML via proxy chain
+   * 2) rss2json as final fallback
    */
   fetchArticles(source: BlogSource): Observable<ArticleMetadata[]> {
-    return this.tryProxy(source, 0);
+    return this.tryXmlProxy(source, 0);
   }
 
-  private tryProxy(source: BlogSource, index: number): Observable<ArticleMetadata[]> {
-    if (index >= CORS_PROXIES.length) return of([]);
-    return this.http.get(CORS_PROXIES[index](source.rssUrl), { responseType: 'text' }).pipe(
-      map((xml) => this.parseXml(xml, source)),
-      catchError(() => this.tryProxy(source, index + 1)),
+  private tryXmlProxy(source: BlogSource, index: number): Observable<ArticleMetadata[]> {
+    if (index >= XML_CORS_PROXIES.length) {
+      return this.fetchViaRss2Json(source).pipe(catchError(() => of([])));
+    }
+
+    return this.http.get(XML_CORS_PROXIES[index](source.rssUrl), { responseType: 'text' }).pipe(
+      map((xml) => {
+        const parsed = this.parseXml(xml, source);
+        if (parsed === null) throw new Error('Proxy returned non-XML content');
+        return parsed;
+      }),
+      catchError(() => this.tryXmlProxy(source, index + 1)),
     );
   }
 
-  // ── XML dispatch ────────────────────────────────────────────────────────
+  private fetchViaRss2Json(source: BlogSource): Observable<ArticleMetadata[]> {
+    const url = `${RSS2JSON_ENDPOINT}?rss_url=${encodeURIComponent(source.rssUrl)}`;
 
-  private parseXml(xml: string, source: BlogSource): ArticleMetadata[] {
+    return this.http.get<Rss2JsonResponse>(url).pipe(
+      map((response) => {
+        if (response.status !== 'ok') {
+          throw new Error(response.message ?? 'rss2json error');
+        }
+
+        return this.mapRss2JsonItems(response.items, source);
+      }),
+    );
+  }
+
+  private mapRss2JsonItems(items: Rss2JsonItem[], source: BlogSource): ArticleMetadata[] {
+    return items.slice(0, MAX_ITEMS).map((item) => ({
+      url: item.link?.trim() ?? '',
+      title: item.title?.trim() ?? '',
+      imageUrl: this.imageRss2Json(item),
+      publishedDate: item.pubDate ?? '',
+      sourceName: source.name,
+      sourceLogoUrl: source.logoUrl,
+      rawContent: item.content || item.description,
+    }));
+  }
+
+  private parseXml(xml: string, source: BlogSource): ArticleMetadata[] | null {
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
 
-    // DOMParser signals a parse failure with a <parsererror> element
-    if (doc.querySelector('parsererror')) return [];
+    // DOMParser signals parse errors with <parsererror>
+    if (doc.querySelector('parsererror')) return null;
 
-    // Atom feeds have a <feed> root; RSS 2.0 has <rss><channel>
+    // Atom feeds use <feed>; RSS 2.0 feeds use <rss>
+    if (!['feed', 'rss'].includes(doc.documentElement.localName)) return null;
+
     return doc.documentElement.localName === 'feed'
       ? this.parseAtom(doc, source)
       : this.parseRss2(doc, source);
   }
-
-  // ── RSS 2.0 ─────────────────────────────────────────────────────────────
 
   private parseRss2(doc: Document, source: BlogSource): ArticleMetadata[] {
     return Array.from(doc.getElementsByTagName('item'))
@@ -66,27 +100,20 @@ export class RssService {
         publishedDate: this.text(item, 'pubDate') || this.text(item, 'dc:date'),
         sourceName: source.name,
         sourceLogoUrl: source.logoUrl,
-        rawContent:
-          this.text(item, 'content:encoded') || this.text(item, 'description'),
+        rawContent: this.text(item, 'content:encoded') || this.text(item, 'description'),
       }));
   }
 
-  /**
-   * RSS 2.0 <link> is a text node between tags — it cannot be an attribute.
-   * Some feeds also use an Atom-style <link href="..."/> inside RSS, so we
-   * check both.
-   */
   private rssLink(item: Element): string {
     const text = item.getElementsByTagName('link')[0]?.textContent?.trim();
     if (text) return text;
+
     return (
       item.getElementsByTagName('link')[0]?.getAttribute('href') ??
       item.getElementsByTagName('guid')[0]?.textContent?.trim() ??
       ''
     );
   }
-
-  // ── Atom ────────────────────────────────────────────────────────────────
 
   private parseAtom(doc: Document, source: BlogSource): ArticleMetadata[] {
     return Array.from(doc.getElementsByTagName('entry'))
@@ -95,71 +122,69 @@ export class RssService {
         url: this.atomLink(entry),
         title: this.text(entry, 'title'),
         imageUrl: this.imageAtom(entry),
-        publishedDate:
-          this.text(entry, 'published') || this.text(entry, 'updated'),
+        publishedDate: this.text(entry, 'published') || this.text(entry, 'updated'),
         sourceName: source.name,
         sourceLogoUrl: source.logoUrl,
-        rawContent:
-          this.text(entry, 'content') || this.text(entry, 'summary'),
+        rawContent: this.text(entry, 'content') || this.text(entry, 'summary'),
       }));
   }
 
   private atomLink(entry: Element): string {
-    // Prefer rel="alternate", then first <link> with href
     const links = Array.from(entry.getElementsByTagName('link'));
     const alt = links.find((l) => l.getAttribute('rel') === 'alternate');
-    return (
-      (alt ?? links.find((l) => l.hasAttribute('href')))?.getAttribute(
-        'href',
-      ) ?? ''
-    );
+
+    return (alt ?? links.find((l) => l.hasAttribute('href')))?.getAttribute('href') ?? '';
   }
 
-  // ── Image extraction ────────────────────────────────────────────────────
-
   private imageRss(item: Element): string | null {
-    // 1. media:content (Yahoo Media RSS — most common)
-    const mc = item.getElementsByTagNameNS(MEDIA_NS, 'content')[0];
-    if (mc?.getAttribute('url')) return mc.getAttribute('url');
+    const mediaContent = item.getElementsByTagNameNS(MEDIA_NS, 'content')[0];
+    if (mediaContent?.getAttribute('url')) return mediaContent.getAttribute('url');
 
-    // 2. media:thumbnail
-    const mt = item.getElementsByTagNameNS(MEDIA_NS, 'thumbnail')[0];
-    if (mt?.getAttribute('url')) return mt.getAttribute('url');
+    const mediaThumbnail = item.getElementsByTagNameNS(MEDIA_NS, 'thumbnail')[0];
+    if (mediaThumbnail?.getAttribute('url')) return mediaThumbnail.getAttribute('url');
 
-    // 3. <enclosure> with image MIME type
-    const enc = item.getElementsByTagName('enclosure')[0];
-    if (enc?.getAttribute('type')?.startsWith('image/'))
-      return enc.getAttribute('url');
+    const enclosure = item.getElementsByTagName('enclosure')[0];
+    if (enclosure?.getAttribute('type')?.startsWith('image/')) {
+      return enclosure.getAttribute('url');
+    }
 
-    // 4. First <img> inside content:encoded or description HTML
-    const html =
-      this.text(item, 'content:encoded') || this.text(item, 'description');
+    const html = this.text(item, 'content:encoded') || this.text(item, 'description');
     return this.firstImgSrc(html);
   }
 
   private imageAtom(entry: Element): string | null {
-    const mc = entry.getElementsByTagNameNS(MEDIA_NS, 'content')[0];
-    if (mc?.getAttribute('url')) return mc.getAttribute('url');
+    const mediaContent = entry.getElementsByTagNameNS(MEDIA_NS, 'content')[0];
+    if (mediaContent?.getAttribute('url')) return mediaContent.getAttribute('url');
 
-    const mt = entry.getElementsByTagNameNS(MEDIA_NS, 'thumbnail')[0];
-    if (mt?.getAttribute('url')) return mt.getAttribute('url');
+    const mediaThumbnail = entry.getElementsByTagNameNS(MEDIA_NS, 'thumbnail')[0];
+    if (mediaThumbnail?.getAttribute('url')) return mediaThumbnail.getAttribute('url');
 
     const html = this.text(entry, 'content') || this.text(entry, 'summary');
     return this.firstImgSrc(html);
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────
+  private imageRss2Json(item: Rss2JsonItem): string | null {
+    if (item.thumbnail) return item.thumbnail;
 
-  /** Safe text extraction — returns '' when element is absent. */
+    const enclosure = item.enclosure?.link;
+    if (enclosure && this.looksLikeImageUrl(enclosure)) return enclosure;
+
+    return this.firstImgSrc(item.content || item.description);
+  }
+
   private text(el: Element, tagName: string): string {
     return el.getElementsByTagName(tagName)[0]?.textContent?.trim() ?? '';
   }
 
-  /** Extract the src of the first <img> found in an HTML string. */
   private firstImgSrc(html: string): string | null {
     if (!html) return null;
+
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.querySelector('img')?.getAttribute('src') ?? null;
+  }
+
+  private looksLikeImageUrl(url: string): boolean {
+    return /\.(png|jpe?g|gif|webp|svg|avif)(\?.*)?$/i.test(url);
   }
 }

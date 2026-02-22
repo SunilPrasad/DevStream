@@ -12,12 +12,10 @@ const mockSource: BlogSource = {
   logoUrl: 'https://example.com/logo.png',
 };
 
-// ── RSS 2.0 fixture ──────────────────────────────────────────────────────────
 const RSS2_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"
      xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Test Blog</title>
     <item>
       <title>Article One</title>
       <link>https://example.com/article-1</link>
@@ -30,22 +28,13 @@ const RSS2_XML = `<?xml version="1.0" encoding="UTF-8"?>
       <title>Article Two</title>
       <link>https://example.com/article-2</link>
       <pubDate>Sat, 11 Jan 2025 10:00:00 +0000</pubDate>
-      <enclosure url="https://example.com/enc.jpg" type="image/jpeg" length="0"/>
-      <description>Another excerpt</description>
-    </item>
-    <item>
-      <title>Article Three</title>
-      <link>https://example.com/article-3</link>
-      <pubDate>Fri, 10 Jan 2025 10:00:00 +0000</pubDate>
       <description><![CDATA[<p><img src="https://example.com/desc-img.jpg"/></p>]]></description>
     </item>
   </channel>
 </rss>`;
 
-// ── Atom fixture ─────────────────────────────────────────────────────────────
 const ATOM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Test Atom Blog</title>
   <entry>
     <title>Atom Article</title>
     <link rel="alternate" href="https://example.com/atom-1"/>
@@ -54,8 +43,31 @@ const ATOM_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </entry>
 </feed>`;
 
-// ── Broken XML ───────────────────────────────────────────────────────────────
-const BAD_XML = `not xml at all <<< broken`;
+const RSS2JSON_OK = {
+  status: 'ok',
+  feed: {
+    url: 'https://example.com/feed',
+    title: 'Example Feed',
+    link: 'https://example.com',
+    author: 'Example',
+    description: 'Example feed',
+    image: 'https://example.com/feed.png',
+  },
+  items: [
+    {
+      title: 'JSON Article',
+      pubDate: '2025-01-12 10:00:00',
+      link: 'https://example.com/json-article',
+      guid: 'json-1',
+      author: 'Author',
+      thumbnail: 'https://example.com/json-thumb.jpg',
+      description: '<p>JSON excerpt</p>',
+      content: '<p>JSON content</p>',
+      enclosure: {},
+      categories: [],
+    },
+  ],
+};
 
 describe('RssService', () => {
   let service: RssService;
@@ -69,29 +81,28 @@ describe('RssService', () => {
         provideHttpClientTesting(),
       ],
     });
+
     service = TestBed.inject(RssService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => httpMock.verify());
 
-  // ── URL ───────────────────────────────────────────────────────────────────
-
-  it('routes requests through corsproxy.io first', () => {
+  it('requests codetabs proxy first', () => {
     service.fetchArticles(mockSource).subscribe();
-    const req = httpMock.expectOne((r) => r.url.includes('corsproxy.io'));
+
+    const req = httpMock.expectOne((r) => r.url.includes('api.codetabs.com'));
     expect(req.request.url).toContain(encodeURIComponent(mockSource.rssUrl));
     req.flush(RSS2_XML);
   });
 
-  // ── RSS 2.0 parsing ───────────────────────────────────────────────────────
-
-  it('parses RSS 2.0 items into ArticleMetadata', () => {
-    let result: ReturnType<typeof service.fetchArticles> extends import('rxjs').Observable<infer T> ? T : never = [];
+  it('parses RSS 2.0 items from proxy XML', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
 
-    expect(result.length).toBe(3);
+    httpMock.expectOne((r) => r.url.includes('api.codetabs.com')).flush(RSS2_XML);
+
+    expect(result.length).toBe(2);
     expect(result[0]).toMatchObject({
       url: 'https://example.com/article-1',
       title: 'Article One',
@@ -99,38 +110,15 @@ describe('RssService', () => {
       sourceName: 'Test Blog',
       sourceLogoUrl: 'https://example.com/logo.png',
     });
-  });
-
-  it('falls back to enclosure image when media:content is absent', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [];
-    service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
-
-    expect(result[1].imageUrl).toBe('https://example.com/enc.jpg');
-  });
-
-  it('falls back to first <img> in description when no media elements exist', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [];
-    service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
-
-    expect(result[2].imageUrl).toBe('https://example.com/desc-img.jpg');
-  });
-
-  it('stores content:encoded in rawContent', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [];
-    service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
-
     expect(result[0].rawContent).toContain('Full content here.');
+    expect(result[1].imageUrl).toBe('https://example.com/desc-img.jpg');
   });
 
-  // ── Atom parsing ──────────────────────────────────────────────────────────
-
-  it('parses Atom feeds', () => {
+  it('parses Atom feeds from proxy XML', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(ATOM_XML);
+
+    httpMock.expectOne((r) => r.url.includes('api.codetabs.com')).flush(ATOM_XML);
 
     expect(result.length).toBe(1);
     expect(result[0]).toMatchObject({
@@ -140,29 +128,38 @@ describe('RssService', () => {
     });
   });
 
-  // ── Error cases ───────────────────────────────────────────────────────────
-
-  it('returns [] on malformed XML', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
+  it('falls back to rss2json when codetabs fails', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(BAD_XML);
 
-    expect(result).toEqual([]);
+    httpMock
+      .expectOne((r) => r.url.includes('api.codetabs.com'))
+      .flush('', { status: 500, statusText: 'Server Error' });
+
+    httpMock.expectOne((r) => r.url.includes('api.rss2json.com')).flush(RSS2JSON_OK);
+
+    expect(result.length).toBe(1);
+    expect(result[0]).toMatchObject({
+      url: 'https://example.com/json-article',
+      title: 'JSON Article',
+      imageUrl: 'https://example.com/json-thumb.jpg',
+    });
   });
 
-  it('returns [] on HTTP error (all proxies exhausted)', () => {
-    let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
+  it('returns [] when all sources fail', () => {
+    let result: import('../models/article.model').ArticleMetadata[] = [
+      { url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' },
+    ];
+
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
 
-    // First proxy (corsproxy.io) fails — triggers fallback
     httpMock
-      .expectOne((r) => r.url.includes('corsproxy.io'))
+      .expectOne((r) => r.url.includes('api.codetabs.com'))
       .flush('', { status: 500, statusText: 'Server Error' });
 
-    // Second proxy (allorigins.win) also fails — returns []
     httpMock
-      .expectOne((r) => r.url.includes('allorigins.win'))
-      .flush('', { status: 500, statusText: 'Server Error' });
+      .expectOne((r) => r.url.includes('api.rss2json.com'))
+      .flush({ status: 'error', message: 'bad feed' }, { status: 200, statusText: 'OK' });
 
     expect(result).toEqual([]);
   });

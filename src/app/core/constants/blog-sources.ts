@@ -10,7 +10,7 @@ import { BlogSource } from '../models/blog-source.model';
 export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Cloudflare Blog',
-    rssUrl: 'https://blog.cloudflare.com/rss/',
+    rssUrl: 'https://blog.cloudflare.com/rss',
     logoUrl: '/assets/logos/cloudflare.ico',
   },
   {
@@ -26,7 +26,7 @@ export const BLOG_SOURCES: BlogSource[] = [
   },
   {
     name: 'Discord Engineering',
-    rssUrl: 'https://discord.com/blog/rss',
+    rssUrl: 'https://discord.com/blog/rss.xml',
     logoUrl: 'https://discord.com/assets/favicon.ico',
   },
   {
@@ -37,7 +37,7 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Microsoft DevBlogs',
     rssUrl: 'https://devblogs.microsoft.com/engineering-at-microsoft/feed/',
-    logoUrl: '/assets/logos/microsoft.png',
+    logoUrl: '/assets/logos/microsoft.svg',
   },
   {
     name: 'GitHub Blog',
