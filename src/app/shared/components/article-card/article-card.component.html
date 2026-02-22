@@ -29,14 +29,6 @@
       </span>
       <div class="ds-card__actions">
         <button
-          class="ds-card__btn-skip"
-          type="button"
-          (click)="skipSource.emit()"
-          [title]="'Skip all ' + article().sourceName + ' articles'"
-        >
-          <i class="bi bi-x-circle"></i> Skip Source
-        </button>
-        <button
           class="ds-card__btn-next"
           type="button"
           (click)="next.emit()"
@@ -49,7 +41,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          Read Post <i class="bi bi-arrow-up-right"></i>
+          Read Original Post <i class="bi bi-arrow-up-right"></i>
         </a>
       </div>
     </div>

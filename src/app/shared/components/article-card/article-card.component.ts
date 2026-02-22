@@ -14,7 +14,6 @@ export class ArticleCardComponent {
   readonly summary = input.required<string>();
 
   readonly next = output<void>();
-  readonly skipSource = output<void>();
 
   protected onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;

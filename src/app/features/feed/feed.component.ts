@@ -127,18 +127,6 @@ export class FeedComponent {
     }, 280);
   }
 
-  // ── Skip source ───────────────────────────────────────────────────────
-  onSkipSource(): void {
-    const article = this.currentArticle();
-    if (!article) return;
-    this.slideState.set('exit-up');
-    setTimeout(() => {
-      this.currentSummary.set(null);
-      this.feedService.skipSource(article.sourceName);
-      this.slideState.set('idle');
-    }, 280);
-  }
-
   // ── Settings ──────────────────────────────────────────────────────────
   openSettings(): void {
     this.showSettings.set(true);

@@ -107,7 +107,8 @@ src/
 - Extract lightweight metadata only — no content, no summarization
 - Interleave articles from all sources using round robin:
   (1 Cloudflare → 1 Meta → 1 Google → 1 Discord → 1 Shopify → 1 Microsoft
-  → 1 GitHub → repeat)
+  → 1 GitHub → 1 Planet PostgreSQL → 1 Redis → 1 ScyllaDB → 1 Percona
+  → 1 HashiCorp → repeat)
 - Fix interleaved order for the session
 - Store article pool as a signal in feed.service.ts
 - First ever visit: pick a random index as starting point
@@ -160,6 +161,11 @@ src/
 | Shopify Engineering | https://shopify.engineering/index.xml                         |
 | Microsoft           | https://devblogs.microsoft.com/engineering-at-microsoft/feed/ |
 | GitHub Blog         | https://github.blog/feed/                                     |
+| Planet PostgreSQL   | https://planet.postgresql.org/rss20.xml                       |
+| Redis Blog          | https://redis.io/blog/feed/                                   |
+| ScyllaDB Blog       | https://www.scylladb.com/feed/                                |
+| Percona Blog        | https://www.percona.com/blog/feed/                            |
+| HashiCorp Blog      | https://www.hashicorp.com/blog/feed.xml                       |
 
 ---
 
