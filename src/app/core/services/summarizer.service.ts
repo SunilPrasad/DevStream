@@ -9,7 +9,7 @@ import { ClaudeRequest, ClaudeResponse } from '../models/claude-api.model';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 const MAX_TOKENS = 1500;
-const API_KEY_STORAGE_KEY = '';
+const API_KEY_STORAGE_KEY = 'devstream_claude_api_key';
 const FALLBACK_SUMMARY = 'Summary unavailable for this article.';
 
 const SUMMARISE_PROMPT = (title: string, text: string) =>
