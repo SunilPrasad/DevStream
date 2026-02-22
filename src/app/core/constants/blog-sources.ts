@@ -3,14 +3,14 @@ import { BlogSource } from '../models/blog-source.model';
 /**
  * All RSS sources for DevStream.
  * Order defines the round-robin interleaving used by FeedService:
- *   Netflix[0] → Meta[0] → Google[0] → Uber[0] → Airbnb[0]
- *   → Microsoft[0] → GitHub[0] → Netflix[1] → ...
+ *   Cloudflare[0] → Meta[0] → Google[0] → Discord[0] → Shopify[0]
+ *   → Microsoft[0] → GitHub[0] → Cloudflare[1] → ...
  */
 export const BLOG_SOURCES: BlogSource[] = [
   {
-    name: 'Netflix Tech Blog',
-    rssUrl: 'https://netflixtechblog.com/feed',
-    logoUrl: 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png',
+    name: 'Cloudflare Blog',
+    rssUrl: 'https://blog.cloudflare.com/rss/',
+    logoUrl: 'https://www.cloudflare.com/favicon-32x32.png',
   },
   {
     name: 'Meta Engineering',
@@ -24,14 +24,14 @@ export const BLOG_SOURCES: BlogSource[] = [
     logoUrl: 'https://www.gstatic.com/images/branding/googleg/2x/googleg_standard_color_128dp.png',
   },
   {
-    name: 'Uber Engineering',
-    rssUrl: 'https://medium.com/feed/uber-engineering',
-    logoUrl: 'https://d3i4yxtzktqr9n.cloudfront.net/web-static/img/favicon.png',
+    name: 'Discord Engineering',
+    rssUrl: 'https://discord.com/blog/rss',
+    logoUrl: 'https://discord.com/assets/favicon.ico',
   },
   {
-    name: 'Airbnb Engineering',
-    rssUrl: 'https://medium.com/feed/airbnb-engineering',
-    logoUrl: 'https://a0.muscache.com/airbnb/static/icons/apple-touch-icon-180x180-bcbe0ce8b57f11b5f64a89efe2a3dc0c.png',
+    name: 'Shopify Engineering',
+    rssUrl: 'https://shopify.engineering/index.xml',
+    logoUrl: 'https://shopify.dev/favicons/favicon-32x32.png',
   },
   {
     name: 'Microsoft DevBlogs',

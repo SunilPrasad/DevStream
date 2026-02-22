@@ -19,11 +19,11 @@ const makeArticle = (n: number, source = 'Blog'): ArticleMetadata => ({
 
 // Round-robin source order from BLOG_SOURCES
 const SOURCE_NAMES = [
-  'Netflix Tech Blog',
+  'Cloudflare Blog',
   'Meta Engineering',
   'Google Developers',
-  'Uber Engineering',
-  'Airbnb Engineering',
+  'Discord Engineering',
+  'Shopify Engineering',
   'Microsoft DevBlogs',
   'GitHub Blog',
 ];
@@ -61,12 +61,12 @@ describe('FeedService', () => {
     expect(pool.length).toBe(SOURCE_NAMES.length * 2);
 
     // First 7 slots: one article per source in order
-    expect(pool[0].sourceName).toBe('Netflix Tech Blog');
+    expect(pool[0].sourceName).toBe('Cloudflare Blog');
     expect(pool[1].sourceName).toBe('Meta Engineering');
     expect(pool[6].sourceName).toBe('GitHub Blog');
 
     // Second round starts at index 7
-    expect(pool[7].sourceName).toBe('Netflix Tech Blog');
+    expect(pool[7].sourceName).toBe('Cloudflare Blog');
   });
 
   it('skips sources that fail and still builds a pool', () => {
@@ -145,5 +145,25 @@ describe('FeedService', () => {
 
     expect(service.currentIndex()).toBe(before);
     expect(service.currentIndex()).not.toBe(999);
+  });
+
+  it('skipSource removes all articles from the named source and advances past them', () => {
+    localStorage.setItem('devstream_last_index', '0');
+    fetchArticlesMock.mockImplementation((src: BlogSource) => {
+      const idx = SOURCE_NAMES.indexOf(src.name);
+      return of([makeArticle(idx * 10, src.name), makeArticle(idx * 10 + 1, src.name)]);
+    });
+
+    const service = buildService();
+    expect(service.currentIndex()).toBe(0); // starts at Cloudflare Blog[0]
+
+    service.skipSource('Cloudflare Blog');
+
+    // No Cloudflare Blog articles remain
+    expect(service.articles().some((a) => a.sourceName === 'Cloudflare Blog')).toBe(false);
+    // Pool shrinks by 2 articles (the 2 Cloudflare ones)
+    expect(service.articles().length).toBe(SOURCE_NAMES.length * 2 - 2);
+    // currentIndex now points to a non-Cloudflare article
+    expect(service.articles()[service.currentIndex()].sourceName).not.toBe('Cloudflare Blog');
   });
 });

@@ -7,10 +7,14 @@ import { ArticleMetadata } from '../models/article.model';
 import { BlogSource } from '../models/blog-source.model';
 
 /**
- * CORS proxy — wraps any HTTP URL so the browser can fetch cross-origin RSS.
- * No API key required; corsproxy.io is open-source and free.
+ * Ordered list of CORS proxies tried in sequence.
+ * corsproxy.io is tried first; allorigins.win is the fallback.
+ * If all proxies fail the source returns [].
  */
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+const CORS_PROXIES: Array<(url: string) => string> = [
+  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
 const MAX_ITEMS = 20;
 
 // Yahoo Media RSS namespace URI (used by many blogs for images)
@@ -21,15 +25,18 @@ export class RssService {
   private readonly http = inject(HttpClient);
 
   /**
-   * Fetch and parse one RSS/Atom feed via the CORS proxy.
-   * Returns [] on any network or parse error so the session always continues.
+   * Fetch and parse one RSS/Atom feed, trying each CORS proxy in order.
+   * Returns [] only when all proxies are exhausted.
    */
   fetchArticles(source: BlogSource): Observable<ArticleMetadata[]> {
-    const url = CORS_PROXY + encodeURIComponent(source.rssUrl);
+    return this.tryProxy(source, 0);
+  }
 
-    return this.http.get(url, { responseType: 'text' }).pipe(
+  private tryProxy(source: BlogSource, index: number): Observable<ArticleMetadata[]> {
+    if (index >= CORS_PROXIES.length) return of([]);
+    return this.http.get(CORS_PROXIES[index](source.rssUrl), { responseType: 'text' }).pipe(
       map((xml) => this.parseXml(xml, source)),
-      catchError(() => of([])),
+      catchError(() => this.tryProxy(source, index + 1)),
     );
   }
 

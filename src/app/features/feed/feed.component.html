@@ -60,7 +60,12 @@
       (transitionend)="onTransitionEnd()"
     >
       @if (currentSummary(); as summary) {
-        <app-article-card [article]="article" [summary]="summary" />
+        <app-article-card
+          [article]="article"
+          [summary]="summary"
+          (next)="navigate(1)"
+          (skipSource)="onSkipSource()"
+        />
       } @else {
         <app-skeleton-card />
       }

@@ -60,8 +60,36 @@ export class FeedService {
   }
 
   /**
-   * Round-robin interleave: Netflix[0], Meta[0], Google[0], …,
-   * Netflix[1], Meta[1], … so the feed never bunches one source.
+   * Remove all articles from the given source and advance to the next
+   * article from a different source. Useful when a source fails to
+   * produce readable content at runtime.
+   */
+  skipSource(sourceName: string): void {
+    const pool = this.articles();
+    const currentIdx = this.currentIndex();
+
+    const filtered = pool.filter((a) => a.sourceName !== sourceName);
+
+    if (filtered.length === 0) {
+      this.articles.set([]);
+      this.loadError.set('No more articles available after skipping this source.');
+      return;
+    }
+
+    // Find the first article after the current position that is not from the skipped source
+    const nextArticle = pool.slice(currentIdx + 1).find((a) => a.sourceName !== sourceName);
+    const newIndex = nextArticle
+      ? filtered.indexOf(nextArticle)
+      : filtered.length - 1;
+
+    this.articles.set(filtered);
+    this.currentIndex.set(Math.max(0, newIndex));
+    localStorage.setItem(STORAGE_KEY, String(this.currentIndex()));
+  }
+
+  /**
+   * Round-robin interleave: Cloudflare[0], Meta[0], Google[0], …,
+   * Cloudflare[1], Meta[1], … so the feed never bunches one source.
    */
   private interleave(arrays: ArticleMetadata[][]): ArticleMetadata[] {
     const result: ArticleMetadata[] = [];

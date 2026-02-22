@@ -13,11 +13,11 @@
 
   <div class="sp-body">
 
-    <!-- API Key section -->
+    <!-- Claude API Key -->
     <div class="sp-section">
-      <label class="sp-label" for="api-key-input">
+      <label class="sp-label" for="claude-key-input">
         Claude API Key
-        @if (isKeySet) {
+        @if (isClaudeKeySet) {
           <span class="sp-badge sp-badge--ok">
             <i class="bi bi-check-circle-fill"></i> Configured
           </span>
@@ -30,32 +30,76 @@
 
       <div class="sp-input-group">
         <input
-          id="api-key-input"
+          id="claude-key-input"
           class="sp-input"
-          [type]="showKey() ? 'text' : 'password'"
-          [value]="apiKeyInput()"
-          (input)="onInput($event)"
+          [type]="showClaudeKey() ? 'text' : 'password'"
+          [value]="claudeKeyInput()"
+          (input)="onClaudeInput($event)"
           placeholder="sk-ant-api03-…"
           autocomplete="off"
           spellcheck="false"
         />
-        <button class="sp-icon-btn" (click)="toggleShowKey()" [attr.aria-label]="showKey() ? 'Hide key' : 'Show key'">
-          <i [class]="showKey() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+        <button class="sp-icon-btn" (click)="toggleShowClaudeKey()" [attr.aria-label]="showClaudeKey() ? 'Hide key' : 'Show key'">
+          <i [class]="showClaudeKey() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
         </button>
       </div>
 
+      @if (isClaudeKeySet) {
+        <button class="sp-clear-link" (click)="clearClaudeKey()">Remove key</button>
+      }
+
       <p class="sp-hint">
-        Your key is stored only in this browser's localStorage and never leaves your device.
         Get yours at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.
+        Claude is used when both keys are configured.
+      </p>
+    </div>
+
+    <div class="sp-divider"></div>
+
+    <!-- OpenAI API Key -->
+    <div class="sp-section">
+      <label class="sp-label" for="openai-key-input">
+        OpenAI API Key
+        @if (isOpenAiKeySet) {
+          <span class="sp-badge sp-badge--ok">
+            <i class="bi bi-check-circle-fill"></i> Configured
+          </span>
+        } @else {
+          <span class="sp-badge sp-badge--warn">
+            <i class="bi bi-exclamation-circle"></i> Not set
+          </span>
+        }
+      </label>
+
+      <div class="sp-input-group">
+        <input
+          id="openai-key-input"
+          class="sp-input"
+          [type]="showOpenAiKey() ? 'text' : 'password'"
+          [value]="openaiKeyInput()"
+          (input)="onOpenAiInput($event)"
+          placeholder="sk-…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="sp-icon-btn" (click)="toggleShowOpenAiKey()" [attr.aria-label]="showOpenAiKey() ? 'Hide key' : 'Show key'">
+          <i [class]="showOpenAiKey() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+        </button>
+      </div>
+
+      @if (isOpenAiKeySet) {
+        <button class="sp-clear-link" (click)="clearOpenAiKey()">Remove key</button>
+      }
+
+      <p class="sp-hint">
+        Get yours at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.
+        Used as fallback when no Claude key is set. Uses gpt-4o-mini.
       </p>
     </div>
 
   </div>
 
   <div class="sp-footer">
-    @if (isKeySet) {
-      <button class="sp-btn sp-btn--ghost" (click)="clearKey()">Clear key</button>
-    }
     <button class="sp-btn sp-btn--primary" (click)="save()">
       @if (saved()) { <i class="bi bi-check-lg"></i> Saved } @else { Save }
     </button>

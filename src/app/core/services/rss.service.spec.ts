@@ -77,9 +77,9 @@ describe('RssService', () => {
 
   // ── URL ───────────────────────────────────────────────────────────────────
 
-  it('routes requests through allorigins.win', () => {
+  it('routes requests through corsproxy.io first', () => {
     service.fetchArticles(mockSource).subscribe();
-    const req = httpMock.expectOne((r) => r.url.includes('allorigins.win'));
+    const req = httpMock.expectOne((r) => r.url.includes('corsproxy.io'));
     expect(req.request.url).toContain(encodeURIComponent(mockSource.rssUrl));
     req.flush(RSS2_XML);
   });
@@ -89,7 +89,7 @@ describe('RssService', () => {
   it('parses RSS 2.0 items into ArticleMetadata', () => {
     let result: ReturnType<typeof service.fetchArticles> extends import('rxjs').Observable<infer T> ? T : never = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
 
     expect(result.length).toBe(3);
     expect(result[0]).toMatchObject({
@@ -104,7 +104,7 @@ describe('RssService', () => {
   it('falls back to enclosure image when media:content is absent', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
 
     expect(result[1].imageUrl).toBe('https://example.com/enc.jpg');
   });
@@ -112,7 +112,7 @@ describe('RssService', () => {
   it('falls back to first <img> in description when no media elements exist', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
 
     expect(result[2].imageUrl).toBe('https://example.com/desc-img.jpg');
   });
@@ -120,7 +120,7 @@ describe('RssService', () => {
   it('stores content:encoded in rawContent', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(RSS2_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(RSS2_XML);
 
     expect(result[0].rawContent).toContain('Full content here.');
   });
@@ -130,7 +130,7 @@ describe('RssService', () => {
   it('parses Atom feeds', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(ATOM_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(ATOM_XML);
 
     expect(result.length).toBe(1);
     expect(result[0]).toMatchObject({
@@ -145,14 +145,21 @@ describe('RssService', () => {
   it('returns [] on malformed XML', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
-    httpMock.expectOne((r) => r.url.includes('allorigins.win')).flush(BAD_XML);
+    httpMock.expectOne((r) => r.url.includes('corsproxy.io')).flush(BAD_XML);
 
     expect(result).toEqual([]);
   });
 
-  it('returns [] on HTTP error', () => {
+  it('returns [] on HTTP error (all proxies exhausted)', () => {
     let result: import('../models/article.model').ArticleMetadata[] = [{ url: 'x', title: 'x', imageUrl: null, publishedDate: '', sourceName: '', sourceLogoUrl: '' }];
     service.fetchArticles(mockSource).subscribe((a) => (result = a));
+
+    // First proxy (corsproxy.io) fails — triggers fallback
+    httpMock
+      .expectOne((r) => r.url.includes('corsproxy.io'))
+      .flush('', { status: 500, statusText: 'Server Error' });
+
+    // Second proxy (allorigins.win) also fails — returns []
     httpMock
       .expectOne((r) => r.url.includes('allorigins.win'))
       .flush('', { status: 500, statusText: 'Server Error' });

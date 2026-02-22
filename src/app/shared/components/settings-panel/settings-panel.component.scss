@@ -133,6 +133,23 @@
   }
 }
 
+.sp-divider {
+  height: 1px;
+  background: #1e1e1e;
+}
+
+.sp-clear-link {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+}
+
 .sp-footer {
   display: flex;
   justify-content: flex-end;

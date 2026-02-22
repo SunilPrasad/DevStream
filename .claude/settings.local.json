@@ -9,7 +9,9 @@
       "Bash(cd:*)",
       "Bash(cd C:/ClaudeCode/DevStream && npx ng test --run-in-band 2>&1)",
       "Bash(cd C:/ClaudeCode/DevStream && npx ng test 2>&1)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(cd /c/ClaudeCode/DevStream && npx ng build 2>&1)",
+      "Bash(cd /c/ClaudeCode/DevStream && npx ng test --no-watch 2>&1)"
     ]
   }
 }

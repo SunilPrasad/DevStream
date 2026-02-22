@@ -103,10 +103,10 @@ src/
 ---
 
 ## Feed Logic Rules
-- On app load: fetch all RSS sources via rss2json.com
+- On app load: fetch all RSS sources via CORS proxy (corsproxy.io with allorigins.win fallback)
 - Extract lightweight metadata only — no content, no summarization
 - Interleave articles from all sources using round robin:
-  (1 Netflix → 1 Meta → 1 Google → 1 Uber → 1 Airbnb → 1 Microsoft
+  (1 Cloudflare → 1 Meta → 1 Google → 1 Discord → 1 Shopify → 1 Microsoft
   → 1 GitHub → repeat)
 - Fix interleaved order for the session
 - Store article pool as a signal in feed.service.ts
@@ -153,11 +153,11 @@ src/
 ## Blog Sources
 | Blog                | RSS URL                                                       |
 |---------------------|---------------------------------------------------------------|
-| Netflix Tech Blog   | https://netflixtechblog.com/feed                              |
+| Cloudflare Blog     | https://blog.cloudflare.com/rss/                              |
 | Meta Engineering    | https://engineering.fb.com/feed/                              |
 | Google Developers   | https://developers.googleblog.com/feeds/posts/default         |
-| Uber Engineering    | https://www.uber.com/en-US/blog/engineering/rss/              |
-| Airbnb Engineering  | https://medium.com/feed/airbnb-engineering                    |
+| Discord Engineering | https://discord.com/blog/rss                                  |
+| Shopify Engineering | https://shopify.engineering/index.xml                         |
 | Microsoft           | https://devblogs.microsoft.com/engineering-at-microsoft/feed/ |
 | GitHub Blog         | https://github.blog/feed/                                     |
 
