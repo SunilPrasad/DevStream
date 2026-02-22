@@ -10,4 +10,10 @@ export interface ArticleMetadata {
   sourceName: string;
   /** Logo URL for the source blog shown in the card header */
   sourceLogoUrl: string;
+  /**
+   * Raw HTML content from the rss2json `content` field.
+   * Internal only — never rendered in the UI.
+   * Used by SummarizerService as the source text for Claude API calls.
+   */
+  rawContent?: string;
 }

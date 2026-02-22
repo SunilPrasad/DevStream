@@ -174,8 +174,8 @@ At the start of every session:
 [x] Step 1 - Project scaffolded (Angular v21 + Bootstrap v5.3.8 + Zoneless)
 [x] Step 2 - Models and constants defined
 [x] Step 3 - RSS service and feed pool builder
-[ ] Step 4 - Summarizer service (Claude API, on demand, memory cached)
-[ ] Step 5 - Swipeable card feed UI with Angular CDK gestures
-[ ] Step 6 - Skeleton loading states using Bootstrap placeholders
-[ ] Step 7 - Progress persistence with localStorage
-[ ] Step 8 - UI polish, swipe animations, responsive tweaks
+[x] Step 4 - Summarizer service (Claude API, on demand, memory cached)
+[x] Step 5 - Swipeable card feed UI with Angular CDK gestures
+[x] Step 6 - Skeleton loading states using Bootstrap placeholders
+[x] Step 7 - Progress persistence with localStorage
+[x] Step 8 - UI polish, swipe animations, responsive tweaks

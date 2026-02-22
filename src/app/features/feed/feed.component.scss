@@ -1,0 +1,170 @@
+// ── Viewport ──────────────────────────────────────────────────────────────
+.feed-viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bs-body-bg, #0a0a0a);
+  overflow: hidden;
+  user-select: none;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.feed-header {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.5rem;
+  flex-shrink: 0;
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #e8e8e8;
+    letter-spacing: -0.02em;
+
+    .bi { color: var(--bs-primary, #3b82f6); font-size: 1rem; }
+  }
+
+  &__progress {
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: #555;
+    font-weight: 500;
+  }
+
+  &__settings {
+    background: none;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover { color: #e8e8e8; border-color: #444; }
+  }
+}
+
+// ── Card wrapper — fills remaining height, centred ────────────────────────
+.card-wrapper {
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 480px;
+  min-height: 0; // allow flex shrink
+  position: relative;
+  will-change: transform, opacity;
+
+  // Exit transitions (applied when slide-state changes)
+  &.exit-up, &.exit-down {
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
+    pointer-events: none;
+  }
+
+  &.exit-up   { transform: translateY(-108vh); opacity: 0; }
+  &.exit-down { transform: translateY( 108vh); opacity: 0; }
+
+  // CDK snap-back — smooth return to centre when threshold not reached
+  &.cdk-drag-animating {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+  }
+}
+
+// Disable CDK's default preview/placeholder behaviour
+.cdk-drag-preview   { display: none; }
+.cdk-drag-placeholder { opacity: 0; }
+
+// ── State overlays ────────────────────────────────────────────────────────
+.feed-state-overlay {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-body-color, #e8e8e8);
+  text-align: center;
+  padding: 2rem;
+}
+
+// ── Source badge — bottom-left of viewport ────────────────────────────────
+.source-badge {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(calc(-240px + 1rem)); // align with left edge of 480px card
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid #2a2a2a;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem 0.25rem 0.35rem;
+  pointer-events: none;
+
+  img {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    object-fit: contain;
+  }
+
+  span {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #888;
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // On narrow screens, anchor to left edge normally
+  @media (max-width: 520px) {
+    left: 1rem;
+    transform: none;
+  }
+}
+
+// ── Swipe hint ────────────────────────────────────────────────────────────
+.swipe-hint {
+  position: absolute;
+  bottom: 1rem;
+  right: 50%;
+  transform: translateX(calc(240px - 1.5rem)); // align with right edge of 480px card
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #3a3a3a;
+  pointer-events: none;
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  animation: hint-pulse 2.5s ease-in-out infinite;
+
+  i { font-size: 0.85rem; }
+
+  @media (max-width: 520px) {
+    right: 1rem;
+    transform: none;
+  }
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.8; }
+}

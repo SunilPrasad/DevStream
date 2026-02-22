@@ -44,6 +44,7 @@ export class RssService {
       publishedDate: item.pubDate,
       sourceName: source.name,
       sourceLogoUrl: source.logoUrl,
+      rawContent: item.content || item.description || '',
     };
   }
 

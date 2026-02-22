@@ -1,0 +1,41 @@
+<article class="ds-card">
+
+  <!-- Top 30% — hero image -->
+  <div class="ds-card__image">
+    <img
+      [src]="article().imageUrl ?? article().sourceLogoUrl"
+      [alt]="article().title"
+      (error)="onImageError($event)"
+    />
+  </div>
+
+  <!-- Bottom 70% — content -->
+  <div class="ds-card__body">
+
+    <!-- Source logo — top-right corner -->
+    <img
+      class="ds-card__source-logo"
+      [src]="article().sourceLogoUrl"
+      [alt]="article().sourceName"
+    />
+
+    <h2 class="ds-card__title">{{ article().title }}</h2>
+
+    <p class="ds-card__summary">{{ summary() }}</p>
+
+    <div class="ds-card__meta">
+      <span class="ds-card__date">
+        {{ article().publishedDate | date: 'dd MMM yyyy' }}
+      </span>
+      <a
+        class="ds-card__cta"
+        [href]="article().url"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Read Original Post <i class="bi bi-arrow-up-right"></i>
+      </a>
+    </div>
+
+  </div>
+</article>

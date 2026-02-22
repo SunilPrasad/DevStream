@@ -1,4 +1,91 @@
-<div class="feed-container">
-  <!-- Placeholder — swipeable card feed (Step 5) -->
-  <p class="text-muted text-center mt-5">Feed coming soon…</p>
+<!-- ── Full-screen feed viewport ─────────────────────────────────────── -->
+<div class="feed-viewport">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+  <header class="feed-header">
+    <span class="feed-header__logo">
+      <i class="bi bi-broadcast-pin"></i>
+      DevStream
+    </span>
+
+    @if (!isLoading() && articles().length > 0) {
+      <span class="feed-header__progress">
+        {{ currentIndex() + 1 }}&thinsp;/&thinsp;{{ articles().length }}
+      </span>
+    }
+
+    <button class="feed-header__settings" (click)="openSettings()" aria-label="Open settings">
+      <i class="bi bi-gear"></i>
+    </button>
+  </header>
+
+  <!-- ══ FEED BODY ════════════════════════════════════════════════════════ -->
+
+  @if (isLoading()) {
+    <!-- Loading state -->
+    <div class="feed-state-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading feed…</span>
+      </div>
+      <p class="mt-3 text-muted small">Fetching articles…</p>
+    </div>
+
+  } @else if (loadError()) {
+    <!-- Error state -->
+    <div class="feed-state-overlay">
+      <i class="bi bi-exclamation-circle text-danger fs-1"></i>
+      <p class="mt-3 text-muted">{{ loadError() }}</p>
+      <p class="text-muted small mt-1">Check your connection and reload.</p>
+    </div>
+
+  } @else if (articles().length === 0) {
+    <!-- Empty state -->
+    <div class="feed-state-overlay">
+      <i class="bi bi-inbox text-muted fs-1"></i>
+      <p class="mt-3 text-muted small">No articles found.</p>
+    </div>
+
+  } @else if (currentArticle(); as article) {
+    <!-- ── Active card ──────────────────────────────────────────────── -->
+    <div
+      class="card-wrapper"
+      [class.exit-up]="slideState() === 'exit-up'"
+      [class.exit-down]="slideState() === 'exit-down'"
+      [style.transform]="isDragging() ? 'translateY(' + dragOffsetY() + 'px)' : null"
+      cdkDrag
+      cdkDragLockAxis="y"
+      (cdkDragStarted)="onDragStarted()"
+      (cdkDragMoved)="onDragMoved($event)"
+      (cdkDragEnded)="onDragEnded($event)"
+      (transitionend)="onTransitionEnd()"
+    >
+      @if (currentSummary(); as summary) {
+        <app-article-card [article]="article" [summary]="summary" />
+      } @else {
+        <app-skeleton-card />
+      }
+    </div>
+
+    <!-- ── Swipe hint (fades after first swipe) ───────────────────── -->
+    @if (hintVisible()) {
+      <div class="swipe-hint" aria-hidden="true">
+        <i class="bi bi-chevron-compact-up"></i>
+        <span>swipe</span>
+        <i class="bi bi-chevron-compact-down"></i>
+      </div>
+    }
+
+    <!-- ── Source badge ───────────────────────────────────────────── -->
+    <div class="source-badge">
+      <img [src]="article.sourceLogoUrl" [alt]="article.sourceName" />
+      <span>{{ article.sourceName }}</span>
+    </div>
+
+  }
+
 </div>
+
+<!-- ══ SETTINGS PANEL ═══════════════════════════════════════════════════ -->
+@if (showSettings()) {
+  <app-settings-panel (close)="closeSettings()" />
+}

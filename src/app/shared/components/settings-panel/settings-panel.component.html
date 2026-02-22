@@ -1,0 +1,64 @@
+<!-- Backdrop -->
+<div class="sp-backdrop" (click)="close.emit()" aria-hidden="true"></div>
+
+<!-- Panel -->
+<div class="sp-panel" role="dialog" aria-modal="true" aria-label="Settings">
+
+  <div class="sp-header">
+    <span class="sp-title">Settings</span>
+    <button class="sp-close" (click)="close.emit()" aria-label="Close settings">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="sp-body">
+
+    <!-- API Key section -->
+    <div class="sp-section">
+      <label class="sp-label" for="api-key-input">
+        Claude API Key
+        @if (isKeySet) {
+          <span class="sp-badge sp-badge--ok">
+            <i class="bi bi-check-circle-fill"></i> Configured
+          </span>
+        } @else {
+          <span class="sp-badge sp-badge--warn">
+            <i class="bi bi-exclamation-circle"></i> Not set
+          </span>
+        }
+      </label>
+
+      <div class="sp-input-group">
+        <input
+          id="api-key-input"
+          class="sp-input"
+          [type]="showKey() ? 'text' : 'password'"
+          [value]="apiKeyInput()"
+          (input)="onInput($event)"
+          placeholder="sk-ant-api03-…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="sp-icon-btn" (click)="toggleShowKey()" [attr.aria-label]="showKey() ? 'Hide key' : 'Show key'">
+          <i [class]="showKey() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+        </button>
+      </div>
+
+      <p class="sp-hint">
+        Your key is stored only in this browser's localStorage and never leaves your device.
+        Get yours at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="sp-footer">
+    @if (isKeySet) {
+      <button class="sp-btn sp-btn--ghost" (click)="clearKey()">Clear key</button>
+    }
+    <button class="sp-btn sp-btn--primary" (click)="save()">
+      @if (saved()) { <i class="bi bi-check-lg"></i> Saved } @else { Save }
+    </button>
+  </div>
+
+</div>
