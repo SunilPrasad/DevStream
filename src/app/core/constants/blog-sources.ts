@@ -11,12 +11,12 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Cloudflare Blog',
     rssUrl: 'https://blog.cloudflare.com/rss/',
-    logoUrl: 'https://www.cloudflare.com/favicon-32x32.png',
+    logoUrl: '/assets/logos/cloudflare.ico',
   },
   {
     name: 'Meta Engineering',
     rssUrl: 'https://engineering.fb.com/feed/',
-    logoUrl: 'https://engineering.fb.com/wp-content/uploads/2021/09/meta-engineering-logo.png',
+    logoUrl: '/assets/logos/meta.ico',
   },
   {
     name: 'Google Developers',
@@ -32,12 +32,12 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Shopify Engineering',
     rssUrl: 'https://shopify.engineering/index.xml',
-    logoUrl: 'https://shopify.dev/favicons/favicon-32x32.png',
+    logoUrl: '/assets/logos/shopify.ico',
   },
   {
     name: 'Microsoft DevBlogs',
     rssUrl: 'https://devblogs.microsoft.com/engineering-at-microsoft/feed/',
-    logoUrl: 'https://devblogs.microsoft.com/wp-content/uploads/sites/34/2019/02/cropped-microsoft_logo_element.png',
+    logoUrl: '/assets/logos/microsoft.png',
   },
   {
     name: 'GitHub Blog',
@@ -47,17 +47,17 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'Planet PostgreSQL',
     rssUrl: 'https://planet.postgresql.org/rss20.xml',
-    logoUrl: 'https://planet.postgresql.org/favicon.ico',
+    logoUrl: '/assets/logos/planet-postgresql.ico',
   },
   {
     name: 'Redis Blog',
     rssUrl: 'https://redis.io/blog/feed/',
-    logoUrl: 'https://redis.io/images/favicons/favicon-32x32.png',
+    logoUrl: '/assets/logos/redis.ico',
   },
   {
     name: 'ScyllaDB Blog',
     rssUrl: 'https://www.scylladb.com/feed/',
-    logoUrl: 'https://www.scylladb.com/wp-content/uploads/favicon.png',
+    logoUrl: '/assets/logos/scylladb.ico',
   },
   {
     name: 'Percona Blog',
@@ -67,6 +67,6 @@ export const BLOG_SOURCES: BlogSource[] = [
   {
     name: 'HashiCorp Blog',
     rssUrl: 'https://www.hashicorp.com/blog/feed.xml',
-    logoUrl: 'https://www.hashicorp.com/favicon.ico',
+    logoUrl: '/assets/logos/hashicorp.png',
   },
 ];

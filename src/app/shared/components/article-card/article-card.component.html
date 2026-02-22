@@ -17,6 +17,7 @@
       class="ds-card__source-logo"
       [src]="article().sourceLogoUrl"
       [alt]="article().sourceName"
+      (error)="onSourceLogoError($event)"
     />
 
     <h2 class="ds-card__title">{{ article().title }}</h2>
