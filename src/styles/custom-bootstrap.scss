@@ -1,0 +1,50 @@
+// ─── Bootstrap SCSS overrides for DevStream dark aesthetic ───────────────────
+// Override Bootstrap Sass variables BEFORE importing Bootstrap so the compiled
+// CSS already reflects our theme. CSS custom properties below handle runtime
+// Bootstrap dark-mode overrides.
+
+// Primary colour
+$primary: #3b82f6;
+
+// Body
+$body-bg: #0a0a0a;
+$body-color: #e8e8e8;
+
+// Cards
+$card-bg: #141414;
+$card-border-color: #2a2a2a;
+
+// Borders
+$border-color: #2a2a2a;
+
+// Import Bootstrap (SCSS — no Bootstrap JS is loaded anywhere)
+@import 'bootstrap/scss/bootstrap';
+
+// ─── CSS custom property overrides (applied on top of Bootstrap dark mode) ───
+// These ensure Bootstrap components that rely on CSS vars also pick up our theme.
+:root,
+[data-bs-theme='dark'] {
+  --bs-body-bg: #0a0a0a;
+  --bs-body-color: #e8e8e8;
+  --bs-card-bg: #141414;
+  --bs-border-color: #2a2a2a;
+  --bs-primary: #3b82f6;
+  --bs-primary-rgb: 59, 130, 246;
+  --bs-link-color: #3b82f6;
+  --bs-link-hover-color: #60a5fa;
+}
+
+// ─── Bootstrap Icons ─────────────────────────────────────────────────────────
+@import 'bootstrap-icons/font/bootstrap-icons';
+
+// ─── Global base styles ──────────────────────────────────────────────────────
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; // prevent scroll behind swipe cards
+}
