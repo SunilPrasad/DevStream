@@ -66,6 +66,45 @@
 
 .sp-section { display: flex; flex-direction: column; gap: 0.5rem; }
 
+.sp-mode-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sp-mode-btn {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: #3b82f6;
+  }
+
+  &--active {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.12);
+  }
+}
+
+.sp-mode-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+.sp-mode-desc {
+  font-size: 0.72rem;
+  color: #7c7c7c;
+  line-height: 1.35;
+}
+
 .sp-label {
   display: flex;
   align-items: center;

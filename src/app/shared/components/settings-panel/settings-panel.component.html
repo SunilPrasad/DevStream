@@ -13,6 +13,32 @@
 
   <div class="sp-body">
 
+    <!-- Summarizer mode -->
+    <div class="sp-section">
+      <label class="sp-label">Summarizer Mode</label>
+
+      <div class="sp-mode-grid" role="radiogroup" aria-label="Summarizer mode">
+        @for (option of modeOptions; track option.value) {
+          <button
+            type="button"
+            class="sp-mode-btn"
+            [class.sp-mode-btn--active]="summarizerMode() === option.value"
+            [attr.aria-pressed]="summarizerMode() === option.value"
+            (click)="setMode(option.value)"
+          >
+            <span class="sp-mode-title">{{ option.label }}</span>
+            <span class="sp-mode-desc">{{ option.description }}</span>
+          </button>
+        }
+      </div>
+
+      <p class="sp-hint">
+        Offline mode is the default and does not require any API key.
+      </p>
+    </div>
+
+    <div class="sp-divider"></div>
+
     <!-- Claude API Key -->
     <div class="sp-section">
       <label class="sp-label" for="claude-key-input">
@@ -35,7 +61,7 @@
           [type]="showClaudeKey() ? 'text' : 'password'"
           [value]="claudeKeyInput()"
           (input)="onClaudeInput($event)"
-          placeholder="sk-ant-api03-…"
+          placeholder="sk-ant-api03-..."
           autocomplete="off"
           spellcheck="false"
         />
@@ -49,8 +75,7 @@
       }
 
       <p class="sp-hint">
-        Get yours at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.
-        Claude is used when both keys are configured.
+        Used only when Summarizer Mode is set to Claude.
       </p>
     </div>
 
@@ -78,7 +103,7 @@
           [type]="showOpenAiKey() ? 'text' : 'password'"
           [value]="openaiKeyInput()"
           (input)="onOpenAiInput($event)"
-          placeholder="sk-…"
+          placeholder="sk-..."
           autocomplete="off"
           spellcheck="false"
         />
@@ -92,8 +117,7 @@
       }
 
       <p class="sp-hint">
-        Get yours at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.
-        Used as fallback when no Claude key is set. Uses gpt-4o-mini.
+        Used only when Summarizer Mode is set to OpenAI.
       </p>
     </div>
 
